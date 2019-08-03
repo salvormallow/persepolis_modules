@@ -29,6 +29,7 @@ func TestTerraformAnalytics(t *testing.T) {
 		},
 	}
 
+	defer terraform.Destroy(t, terraformOptions)
 	terraform.InitAndApply(t, terraformOptions)
 
 	region := "us-east-1"
@@ -36,7 +37,6 @@ func TestTerraformAnalytics(t *testing.T) {
 	firehoseBufferInterval, _ := strconv.Atoi(terraform.Output(t, terraformOptions, "firehose_buffer_interval"))
 	bucketID := terraform.Output(t, terraformOptions, "bucket_id")
 
-	defer terraform.Destroy(t, terraformOptions)
 	defer aws.EmptyS3Bucket(t, region, bucketID)
 
 	//wait for message to arrive in bucket

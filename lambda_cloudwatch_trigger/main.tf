@@ -1,5 +1,5 @@
 
-resource "aws_lambda_function" "lambda_s3_metadata" {
+resource "aws_lambda_function" "lambda" {
   function_name = "${var.prefix}-${var.lambda_function_name}"
   filename = var.lambda_filename
   handler = var.lambda_handler
@@ -15,13 +15,13 @@ resource "aws_lambda_function" "lambda_s3_metadata" {
 resource "aws_cloudwatch_event_target" "cloudwatch_lambda_trigger" {
   rule = var.event_trigger_name
   target_id = "lambda_s3_metadata"
-  arn = aws_lambda_function.lambda_s3_metadata.arn
+  arn = aws_lambda_function.lambda.arn
 }
 
 resource "aws_lambda_permission" "lambda_permission" {
   statement_id = "AllowExecutionFromCloudWatch"
   action = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.lambda_s3_metadata.function_name
+  function_name = aws_lambda_function.lambda.function_name
   principal = "events.amazonaws.com"
   source_arn = var.event_trigger_name
 }

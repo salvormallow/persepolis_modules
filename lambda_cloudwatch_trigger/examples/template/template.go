@@ -9,6 +9,10 @@ func main() {
 	lambda.Start(HandleRequest)
 }
 
-func HandleRequest(ctx context.Context) error {
+type Test struct {
+	Value string `json:"value"`
+}
 
+func HandleRequest(ctx context.Context, event Test) (string, error) {
+	return event.Value, nil
 }
