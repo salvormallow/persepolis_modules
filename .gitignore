@@ -1,4 +1,6 @@
-
+.idea*
+*.DS_Store
+venv*
 *.tfstate
 .terraform*
 *.tfstate.backup
