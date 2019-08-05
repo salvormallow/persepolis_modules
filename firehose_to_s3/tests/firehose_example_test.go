@@ -6,9 +6,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/gruntwork-io/terratest/modules/aws"
+	"github.com/gruntwork-io/terratest/modules/random"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"math/rand"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 )
@@ -25,7 +27,7 @@ func TestTerraformAnalytics(t *testing.T) {
 	terraformOptions := &terraform.Options{
 		TerraformDir: "../examples",
 		Vars: map[string]interface{}{
-			"env_name": "jenkins",
+			"prefix": strings.ToLower(random.UniqueId()),
 		},
 	}
 
@@ -35,18 +37,18 @@ func TestTerraformAnalytics(t *testing.T) {
 	region := "us-east-1"
 	firehoseName := terraform.Output(t, terraformOptions, "firehose_name")
 	firehoseBufferInterval, _ := strconv.Atoi(terraform.Output(t, terraformOptions, "firehose_buffer_interval"))
-	bucketID := terraform.Output(t, terraformOptions, "bucket_id")
+	bucketName := terraform.Output(t, terraformOptions, "bucket_name")
 
-	defer aws.EmptyS3Bucket(t, region, bucketID)
-
-	//wait for message to arrive in bucket
-	time.Sleep(time.Duration(firehoseBufferInterval+60) * time.Second)
+	defer aws.EmptyS3Bucket(t, region, bucketName)
 
 	//send a test message to firehose then sleep to let the message arrive in s3
 	sendFirehoseMessage(t, region, firehoseName)
 
+	//wait for message to arrive in bucket
+	time.Sleep(time.Duration(firehoseBufferInterval+60) * time.Second)
+
 	//check s3 for the message
-	assertS3NotEmpty(t, region, bucketID)
+	assertS3NotEmpty(t, region, bucketName)
 
 }
 
@@ -82,9 +84,9 @@ func sendFirehoseMessage(t *testing.T, region string, firhoseName string) {
 	}
 }
 
-func assertS3NotEmpty(t *testing.T, region string, bucketID string) int {
+func assertS3NotEmpty(t *testing.T, region string, bucketName string) int {
 	s3Client := aws.NewS3Client(t, region)
-	resp, err := s3Client.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: &bucketID})
+	resp, err := s3Client.ListObjectsV2(&s3.ListObjectsV2Input{Bucket: &bucketName})
 	if err != nil {
 		t.Fatalf("List Bucket err: %v\n", err)
 	}

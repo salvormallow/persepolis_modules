@@ -41,3 +41,10 @@ resource "aws_instance" "test_instance" {
     Name = "${var.prefix}-${var.test_instance_name}"
   }
 }
+
+output "instance_id" {
+  value = "${aws_instance.test_instance.id}"
+}
+output "instance_public_ip" {
+  value = "${aws_instance.test_instance.public_ip}"
+}
