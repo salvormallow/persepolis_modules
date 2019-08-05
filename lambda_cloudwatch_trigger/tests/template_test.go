@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"encoding/json"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/gruntwork-io/terratest/modules/random"
@@ -9,25 +10,35 @@ import (
 	"testing"
 )
 
+type Response struct {
+	Response string `json:"response"`
+}
+
+type Test struct {
+	Value string `json:"value"`
+}
+
 func TestTemplate(t *testing.T){
 	options := &terraform.Options{
-		TerraformDir:             "../examples/template",
+		TerraformDir:             "../examples/basic",
 		Vars: map[string]interface{}{
 			"prefix" : strings.ToLower(random.UniqueId()),
 		},
+
 	}
 	defer terraform.Destroy(t, options)
 	terraform.InitAndApply(t, options)
 
-	//region := "us-east-1"
+	region := terraform.Output(t, options, "region" )
+	lambdaName := terraform.Output(t, options, "lambda_function_name")
 
-
-
+	//Test the basic lambda function
+	invokeLambda(t, region, lambdaName)
 
 }
 
 
-func invokeLambda(t *testing.T, region string, lambdaArn string) {
+func invokeLambda(t *testing.T, region string, lambdaName string) {
 	sess, err := aws.NewAuthenticatedSessionFromDefaultCredentials(region)
 
 	if err != nil {
@@ -35,15 +46,36 @@ func invokeLambda(t *testing.T, region string, lambdaArn string) {
 	}
 
 	lambdaSvc := lambda.New(sess)
-	functionName := lambdaArn
-
-	lambdaInput := &lambda.InvokeInput{
-		FunctionName: &functionName,
+	randomValue := random.UniqueId()
+	testPayload := Test{
+		Value: randomValue,
+	}
+	testJson, err := json.Marshal(&testPayload)
+	if err != nil {
+		t.Errorf("Failed to parse input payload: %v\n", err)
 	}
 
-	_, err = lambdaSvc.Invoke(lambdaInput)
+	lambdaInput := &lambda.InvokeInput{
+		FunctionName: &lambdaName,
+		Payload: testJson,
+	}
+
+	output, err := lambdaSvc.Invoke(lambdaInput)
 	if err != nil {
 		t.Fatalf("Invoke Lambda err: %v\n", err)
 	}
+
+	response := Response{}
+
+	err = json.Unmarshal(output.Payload, &response)
+
+	if err != nil{
+		t.Fatalf("Failed to parse output payload: %v\n", err)
+	}
+	if randomValue != response.Response{
+		t.Errorf("Value does not match input:%s output:%s", randomValue, response.Response)
+	}
+
+
 
 }

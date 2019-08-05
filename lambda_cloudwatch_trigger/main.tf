@@ -7,14 +7,14 @@ resource "aws_lambda_function" "lambda" {
   role = aws_iam_role.lambda_role.arn
 
   environment {
-    variables = var.lambda_environmental_variables
+    variables = merge(var.lambda_environmental_variables, {region: data.aws_region.current.name})
   }
 }
 
 
 resource "aws_cloudwatch_event_target" "cloudwatch_lambda_trigger" {
   rule = var.event_trigger_name
-  target_id = "lambda_s3_metadata"
+  target_id = aws_lambda_function.lambda.function_name
   arn = aws_lambda_function.lambda.arn
 }
 
@@ -23,7 +23,7 @@ resource "aws_lambda_permission" "lambda_permission" {
   action = "lambda:InvokeFunction"
   function_name = aws_lambda_function.lambda.function_name
   principal = "events.amazonaws.com"
-  source_arn = var.event_trigger_name
+  source_arn = var.event_trigger_arn
 }
 
 resource "aws_iam_role" "lambda_role" {
@@ -41,3 +41,5 @@ data "template_file" "lambda_policy_template" {
   template = file(var.lambda_policy_template)
   vars = var.lambda_policy_variables
 }
+
+data "aws_region" "current" {}
