@@ -1,3 +1,8 @@
+resource "aws_cloudwatch_event_target" "cloudwatch_lambda_trigger" {
+  rule = var.event_trigger_name
+  target_id = aws_lambda_function.lambda.function_name
+  arn = aws_lambda_function.lambda.arn
+}
 
 resource "aws_lambda_function" "lambda" {
   function_name = "${var.prefix}-${var.lambda_function_name}"
@@ -11,12 +16,6 @@ resource "aws_lambda_function" "lambda" {
   }
 }
 
-
-resource "aws_cloudwatch_event_target" "cloudwatch_lambda_trigger" {
-  rule = var.event_trigger_name
-  target_id = aws_lambda_function.lambda.function_name
-  arn = aws_lambda_function.lambda.arn
-}
 
 resource "aws_lambda_permission" "lambda_permission" {
   statement_id = "AllowExecutionFromCloudWatch"
