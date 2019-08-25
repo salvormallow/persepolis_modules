@@ -29,4 +29,5 @@ data "template_file" "firehose_policy_template" {
 
 resource "aws_s3_bucket" "s3_bucket" {
   bucket = "${var.prefix}-${var.bucket_name}"
+  force_destroy = "${var.prefix == "production" ? false : true}"
 }
