@@ -64,6 +64,15 @@ resource "aws_security_group_rule" "allow_ssh" {
   security_group_id = aws_security_group.customer_sg.id
 }
 
+resource "aws_security_group_rule" "allow_udp" {
+  type            = "ingress"
+  from_port       = 514
+  to_port         = 514
+  protocol        = "udp"
+  cidr_blocks = ["0.0.0.0/0"]
+  security_group_id = aws_security_group.customer_sg.id
+}
+
 resource "aws_security_group_rule" "allow_outbound" {
   type            = "egress"
   from_port       = 0
