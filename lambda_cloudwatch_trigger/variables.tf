@@ -9,7 +9,7 @@ variable "lambda_runtime" {
   default = "go1.x"
 }
 variable "lambda_environmental_variables" {
-  type = "map"
+  type = map(string)
 }
 
 variable "event_trigger_name" {}
