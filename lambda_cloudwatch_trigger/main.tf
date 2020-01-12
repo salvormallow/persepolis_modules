@@ -10,10 +10,12 @@ resource "aws_lambda_function" "lambda" {
   handler = var.lambda_handler
   runtime = var.lambda_runtime
   role = aws_iam_role.lambda_role.arn
+  source_code_hash = filebase64sha256(var.lambda_filename)
 
   environment {
     variables = merge(var.lambda_environmental_variables, {region: data.aws_region.current.name})
   }
+
 }
 
 
